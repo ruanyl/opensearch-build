@@ -53,7 +53,7 @@ WORKDIR $CONTAINER_USER_HOME
 # Hard code node version and yarn version for now
 # nvm environment variables
 ENV NVM_DIR $CONTAINER_USER_HOME/.nvm
-ENV NODE_VERSION 18.19.0
+ENV NODE_VERSION 20.18.3
 ENV CYPRESS_VERSION 12.13.0
 ARG CYPRESS_VERSION_LIST="5.6.0 9.5.4 12.13.0"
 ENV CYPRESS_LOCATION $CONTAINER_USER_HOME/.cache/Cypress/$CYPRESS_VERSION
@@ -112,12 +112,12 @@ RUN dnf install -y sudo && \
     usermod -a -G opensearch-dashboards $CONTAINER_USER && \
     usermod -a -G adm $CONTAINER_USER && \
     id && \
-    echo "$CONTAINER_USER ALL=(root) NOPASSWD:`which systemctl`, `which env`, `which usermod`, `which dnf`, `which yum`, `which rpm`, `which chmod`, `which kill`, `which curl`, `which rm`, /usr/share/opensearch-dashboards/bin/opensearch-dashboards-plugin" >> /etc/sudoers.d/$CONTAINER_USER
+    echo "$CONTAINER_USER ALL=(root) NOPASSWD:`which systemctl`, `which env`, `which su`, `which usermod`, `which dnf`, `which yum`, `which rpm`, `which chmod`, `which kill`, `which curl`, `which rm`, /usr/share/opensearch-dashboards/bin/opensearch-dashboards-plugin" >> /etc/sudoers.d/$CONTAINER_USER
 
 # Copy from Stage0
 COPY --from=linux_stage_0 --chown=$CONTAINER_USER:$CONTAINER_USER $CONTAINER_USER_HOME $CONTAINER_USER_HOME
 ENV NVM_DIR $CONTAINER_USER_HOME/.nvm
-ENV NODE_VERSION 18.19.0
+ENV NODE_VERSION 20.18.3
 ENV CYPRESS_VERSION 12.13.0
 ENV CYPRESS_LOCATION $CONTAINER_USER_HOME/.cache/Cypress/$CYPRESS_VERSION
 ENV NODE_PATH $NVM_DIR/v$NODE_VERSION/lib/node_modules
@@ -152,7 +152,7 @@ RUN update-alternatives --set python /usr/bin/python3.9 && \
 
 # Add other dependencies
 RUN dnf install -y epel-release && dnf clean all && dnf install -y jq && dnf clean all && \
-    pip3 install cmake==3.23.3
+    pip3 install cmake==3.26.4
 
 # We use the version test to check if packages installed correctly
 # And get added to the PATH

@@ -61,6 +61,7 @@ opensearch_dashboards_vars=(
     opensearchDashboards.defaultAppId
     opensearchDashboards.index
     logging.dest
+    logging.ignoreEnospcError
     logging.json
     logging.quiet
     logging.rotate.enabled
@@ -166,8 +167,14 @@ opensearch_dashboards_vars=(
     data_source.audit.appender.layout.highlight
     data_source.audit.appender.layout.pattern
     ml_commons_dashboards.enabled
-    assistant.chat.enabled
     observability.query_assist.enabled
+    usageCollection.uiMetric.enabled
+    workspace.enabled
+    assistant.chat.enabled
+    assistant.alertInsight.enabled
+    assistant.smartAnomalyDetector.enabled
+    assistant.text2viz.enabled
+    queryEnhancements.queryAssist.summary.enabled
 )
 
 function setupSecurityDashboardsPlugin {
@@ -225,8 +232,8 @@ function runOpensearchDashboards {
     # available for the container this process will run in.
 
     exec "$@" \
-        --cpu.cgroup.path.override=/ \
-        --cpuacct.cgroup.path.override=/ \
+        --ops.cGroupOverrides.cpuPath=/ \
+        --ops.cGroupOverrides.cpuAcctPath=/ \
         "${longopts[@]}"
 }
 

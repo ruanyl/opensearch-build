@@ -26,7 +26,7 @@ class TestOpenSearchDashboardsIntegTest extends BuildPipelineTest {
 
         helper.registerSharedLibrary(
             library().name('jenkins')
-                .defaultVersion('6.3.2')
+                .defaultVersion('8.0.0')
                 .allowOverride(true)
                 .implicit(true)
                 .targetPath('vars')
@@ -65,11 +65,13 @@ class TestOpenSearchDashboardsIntegTest extends BuildPipelineTest {
         binding.setVariable('RUN_DISPLAY_URL', 'https://some/url/redirect')
         binding.setVariable('AGENT_LABEL', agentLabel)
         binding.setVariable('BUILD_MANIFEST', buildManifest)
+        binding.setVariable('BUILD_JOB_NAME', 'test-integ-job')
         binding.setVariable('BUILD_MANIFEST_OPENSEARCH', buildManifestOpenSearch)
         binding.setVariable('BUILD_ID', "${buildId}")
         binding.setVariable('distribution', 'tar' )
         binding.setVariable('COMPONENT_NAME', '' )
         binding.getVariable('currentBuild').upstreamBuilds = [[fullProjectName: jobName]]
+        binding.setVariable('RC_NUMBER', '0')
         def env = binding.getVariable('env')
         env['DOCKER_AGENT'] = [image:'opensearchstaging/opensearchstaging/ci-runner:ci-runner-almallinux8-opensearch-dashboards-integtest-v1', args:'-e JAVA_HOME=/opt/java/openjdk-11']
         env['PUBLIC_ARTIFACT_URL'] = 'DUMMY_PUBLIC_ARTIFACT_URL'
@@ -98,21 +100,45 @@ class TestOpenSearchDashboardsIntegTest extends BuildPipelineTest {
         helper.registerAllowedMethod("s3Upload", [Map])
         helper.registerAllowedMethod('findFiles', [Map.class], null)
         helper.registerAllowedMethod('unstash', [String.class], null)
+        helper.registerAllowedMethod("parallel", [Map]) { stages -> 
+    println "Mock parallel stages:"
+    stages.each { stageName, stageContent ->
+        println "\nStage: ${stageName}"
+        println "Content: ${stageContent.toString()}"
+        // Execute the stage content to simulate parallel execution
+        stageContent.call()
+    }
+}
     }
 
+///
     @Test
     void integTests_runs_for_all_components() {
         super.testPipeline('jenkins/opensearch-dashboards/integ-test.jenkinsfile',
                 'tests/jenkins/jenkinsjob-regression-files/opensearch-dashboards/integ-test.jenkinsfile')
         assert getCommandExecutions('stage', 'validate-artifacts').size() == 1
         assertThat(getCommandExecutions('sh', 'test.sh'), hasItems(
-                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component ganttChartDashboards --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
-                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component anomalyDetectionDashboards --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
-                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component queryWorkbenchDashboards --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
-                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component reportsDashboards --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
-                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component observabilityDashboards --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString()
+                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component ganttChartDashboards  --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
+                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component anomalyDetectionDashboards  --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
+                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component queryWorkbenchDashboards  --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
+                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component reportsDashboards  --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
+                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component observabilityDashboards  --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
+                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component OpenSearch-Dashboards --ci-group 1 --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
+                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component OpenSearch-Dashboards --ci-group 2 --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
+                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component OpenSearch-Dashboards --ci-group 3 --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
+                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component OpenSearch-Dashboards --ci-group 4 --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
+                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component OpenSearch-Dashboards --ci-group 5 --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
+                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component OpenSearch-Dashboards --ci-group 6 --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
+                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component OpenSearch-Dashboards --ci-group 7 --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
+                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component OpenSearch-Dashboards --ci-group 8 --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString(),
+                'env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component OpenSearch-Dashboards --ci-group 9 --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '.toString()
         ))
-        assertThat(getCommandExecutions('sh', 'report.sh'), hasItems('./report.sh manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --artifact-paths opensearch=https://ci.opensearch.org/ci/dbc/distribution-build-opensearch/3.0.0/215/linux/x64/tar opensearch-dashboards=https://ci.opensearch.org/ci/dbc/distribution-build-opensearch-dashboards/3.0.0/215/linux/x64/tar --test-run-id 215 --test-type integ-test --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar '))
+        assertThat(getCommandExecutions('sh', 'report.sh'), hasItems('./report.sh manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --artifact-paths opensearch=https://ci.opensearch.org/ci/dbc/distribution-build-opensearch/3.0.0/215/linux/x64/tar opensearch-dashboards=https://ci.opensearch.org/ci/dbc/distribution-build-opensearch-dashboards/3.0.0/215/linux/x64/tar --test-run-id 215 --test-type integ-test --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar --release-candidate 0 '))
+        assertCallStack().contains('curl -sSL https://ci.opensearch.org/ci/dbc/integ-test-opensearch-dashboards/3.0.0/215/linux/x64/tar/test-results/215/integ-test/test-report.yml --output test-results-osd-215/test-report.yml')
+        assertCallStack().contains('{distributionBuildUrl=https://build.ci.opensearch.org/blue/organizations/jenkins/distribution-build-opensearch-dashboards/detail/distribution-build-opensearch-dashboards/215/pipeline, jobName=dummy_job, testReportManifestYml=test-results-osd-215/test-report.yml}')
+        assertCallStack().contains('integ-test.build({job=integ-test-notification, propagate=false, wait=false, parameters=[null, null]})')
+        assertCallStack().contains('integ-test.string({name=INPUT_MANIFEST, value=3.0.0/opensearch-dashboards-3.0.0.yml})')
+        assertCallStack().contains('integ-test.string({name=DISTRIBUTION_NUMBER, value=215})')
     }
 
     @Test
@@ -124,7 +150,7 @@ class TestOpenSearchDashboardsIntegTest extends BuildPipelineTest {
     @Test
     void checkIfRunningInParallel(){
         runScript('jenkins/opensearch-dashboards/integ-test.jenkinsfile')
-        assertThat(getCommandExecutions('parallel', ''), hasItem('{Run Integtest ganttChartDashboards=groovy.lang.Closure, Run Integtest indexManagementDashboards=groovy.lang.Closure, Run Integtest anomalyDetectionDashboards=groovy.lang.Closure, Run Integtest OpenSearch-Dashboards=groovy.lang.Closure, Run Integtest reportsDashboards=groovy.lang.Closure, Run Integtest queryWorkbenchDashboards=groovy.lang.Closure, Run Integtest observabilityDashboards=groovy.lang.Closure}'))
+        assertThat(getCommandExecutions('parallel', ''), hasItem('{Run Integtest ganttChartDashboards=groovy.lang.Closure, Run Integtest indexManagementDashboards=groovy.lang.Closure, Run Integtest anomalyDetectionDashboards=groovy.lang.Closure, Run Integtest OpenSearch-Dashboards-ci-group-1=groovy.lang.Closure, Run Integtest OpenSearch-Dashboards-ci-group-2=groovy.lang.Closure, Run Integtest OpenSearch-Dashboards-ci-group-3=groovy.lang.Closure, Run Integtest OpenSearch-Dashboards-ci-group-4=groovy.lang.Closure, Run Integtest OpenSearch-Dashboards-ci-group-5=groovy.lang.Closure, Run Integtest OpenSearch-Dashboards-ci-group-6=groovy.lang.Closure, Run Integtest OpenSearch-Dashboards-ci-group-7=groovy.lang.Closure, Run Integtest OpenSearch-Dashboards-ci-group-8=groovy.lang.Closure, Run Integtest OpenSearch-Dashboards-ci-group-9=groovy.lang.Closure, Run Integtest reportsDashboards=groovy.lang.Closure, Run Integtest queryWorkbenchDashboards=groovy.lang.Closure, Run Integtest observabilityDashboards=groovy.lang.Closure}'))
     }
 
     @Test
@@ -133,108 +159,6 @@ class TestOpenSearchDashboardsIntegTest extends BuildPipelineTest {
         runScript('jenkins/opensearch-dashboards/integ-test.jenkinsfile')
         assertThat(getCommandExecutions('error', ''), hasItem('Integration Tests failed to start. Test manifest was not provided or not found in manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml.'))
         assertJobStatusFailure()
-    }
-
-    @Test
-    void checkGHissueCreation() {
-        addParam('UPDATE_GITHUB_ISSUES', true)
-        helper.addShMock("date -d \"3 days ago\" +'%Y-%m-%d'") { script ->
-            return [stdout: "2023-10-24", exitValue: 0]
-        }
-        helper.addShMock("""gh issue list --repo https://github.com/opensearch-project/dashboards-visualizations.git -S "[AUTOCUT] Integration Test failed for ganttChartDashboards: 3.0.0 in:title" --label autocut,v3.0.0 --json number --jq '.[0].number'""") { script ->
-            return [stdout: "", exitValue: 0]
-        }
-        helper.addShMock("""gh issue list --repo https://github.com/opensearch-project/dashboards-visualizations.git -S "[AUTOCUT] Integration Test failed for ganttChartDashboards: 3.0.0 in:title is:closed closed:>=2023-10-24" --label autocut,v3.0.0 --json number --jq '.[0].number'""") { script ->
-            return [stdout: "", exitValue: 0]
-        }
-        helper.addShMock('env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component ganttChartDashboards --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar ', '', 1)
-        assertThrows(Exception) {
-            runScript('jenkins/opensearch-dashboards/integ-test.jenkinsfile')
-        }
-        assertJobStatusFailure()
-        assertThat(getCommandExecutions('sh', 'script'), hasItem("{script=gh issue list --repo https://github.com/opensearch-project/dashboards-observability.git -S \"[AUTOCUT] Integration Test failed for observabilityDashboards: 3.0.0 in:title\" --json number --jq '.[0].number', returnStdout=true}"))
-    }
-
-    @Test
-    void CheckNotClosingGHissue() {
-        addParam('UPDATE_GITHUB_ISSUES', true)
-        helper.addShMock("date -d \"3 days ago\" +'%Y-%m-%d'") { script ->
-            return [stdout: "2023-10-24", exitValue: 0]
-        }
-        helper.addShMock('env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component observabilityDashboards --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar ', '', 1)
-        helper.addShMock('gh issue list --repo https://github.com/opensearch-project/dashboards-visualization.git -S "[AUTOCUT] Integration Test failed for ganttChartDashboards: 3.0.0 in:title" --label autocut,v3.0.0', '', 0)
-        assertThrows(Exception) {
-            runScript('jenkins/opensearch-dashboards/integ-test.jenkinsfile')
-        }
-        assertJobStatusFailure()
-        runScript('jenkins/opensearch-dashboards/integ-test.jenkinsfile')
-        assertThat(getCommandExecutions('sh', 'script'), not(hasItem("{script=gh issue close bbb\nccc -R opensearch-project/dashboards-visualizations --comment \"Closing the issue as the Integration Test passed for ganttChartDashboards<br>Version: 3.0.0<br>Distribution: tar<br>Architecture: x64<br>Platform: linux<br><br>Please check the logs: https://some/url/redirect<br><br> *\", returnStdout=true}")))
-    }
-
-    @Test
-    void checkGHexistingIssue() {
-        addParam('UPDATE_GITHUB_ISSUES', true)
-        helper.addShMock("date -d \"3 days ago\" +'%Y-%m-%d'") { script ->
-            return [stdout: "2023-10-24", exitValue: 0]
-        }
-        helper.addShMock("""gh issue list --repo https://github.com/opensearch-project/dashboards-observability.git -S "[AUTOCUT] Integration Test failed for observabilityDashboards: 3.0.0 in:title is:closed closed:>=2023-10-24" --label autocut,v3.0.0 --json number --jq '.[0].number'""") { script ->
-            return [stdout: "", exitValue: 0]
-        }
-        helper.addShMock("""gh issue list --repo https://github.com/opensearch-project/sql.git -S "[AUTOCUT] Integration Test failed for observabilityDashboards: 3.0.0 in:title" --label autocut,v3.0.0 --json number --jq '.[0].number'""") { script ->
-            return [stdout: "22", exitValue: 0]
-        }
-        helper.addShMock('env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component observabilityDashboards --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar ', '', 1)
-        assertThrows(Exception) {
-            runScript('jenkins/opensearch-dashboards/integ-test.jenkinsfile')
-        }
-        assertJobStatusFailure()
-        assertThat(getCommandExecutions('println', 'Issue'), hasItem('Issue already exists, adding a comment'))
-        assertThat(getCommandExecutions('sh', 'script'), hasItem("{script=gh issue comment bbb\nccc --repo https://github.com/opensearch-project/dashboards-observability.git --body \"The integration test failed at distribution level for component observabilityDashboards<br>Version: 3.0.0<br>Distribution: tar<br>Architecture: x64<br>Platform: linux<br><br>Please check the logs: https://some/url/redirect<br><br> * Test-report manifest:*<br> - https://ci.opensearch.org/ci/dbc/dummy_job/3.0.0/215/linux/x64/tar/test-results/215/integ-test/test-report.yml <br><br> _Note: Steps to reproduce, additional logs and other files can be found within the above test-report manifest. <br>Instructions of this test-report manifest can be found [here](https://github.com/opensearch-project/opensearch-build/tree/main/src/report_workflow#guide-on-test-report-manifest-from-ci)._\", returnStdout=true}"))
-    }
-
-    @Test
-    void checkGHIssueDisable() {
-        addParam('COMPONENT_NAME', 'ganttChartDashboards')
-        helper.addShMock('env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component ganttChartDashboards --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar ', '', 1)
-        assertThrows(Exception) {
-            runScript('jenkins/opensearch-dashboards/integ-test.jenkinsfile')
-        }
-        assertJobStatusFailure()
-        assertThat(getCommandExecutions('sh', 'gh issue').size(), equalTo(0))
-    }
-
-    @Test
-    void verifyLabelRemoval() {
-        addParam('UPDATE_GITHUB_ISSUES', true)
-        helper.addShMock("""gh issue list --repo https://github.com/opensearch-project/dashboards-observability.git -S "[AUTOCUT] Integration Test failed for observabilityDashboards: 3.0.0 in:title" --json number --jq '.[0].number'""") { script ->
-            return [stdout: '65', exitValue: 0]
-        }
-        helper.addShMock("""gh label list --repo https://github.com/opensearch-project/dashboards-observability.git -S linux:tar:x64 --json name --jq '.[0].name'""") { script ->
-            return [stdout: 'linux:tar:x64', exitValue: 0]
-        }
-        helper.addShMock('env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component observabilityDashboards --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar ') { script -> 
-            return [stdout: 'Completed running integtest for component observabilityDashboards', exitValue: 0]
-        }
-        runScript('jenkins/opensearch-dashboards/integ-test.jenkinsfile')
-        assertThat(getCommandExecutions('sh', 'gh issue'), hasItem('{script=gh issue edit 65 -R https://github.com/opensearch-project/dashboards-observability.git --remove-label \"linux:tar:x64\", returnStdout=true}'))
-    }
-
-    @Test
-    void verifyLabelAddition() {
-        addParam('UPDATE_GITHUB_ISSUES', true)
-        helper.addShMock('env PATH=$PATH  ./test.sh integ-test manifests/tests/jenkins/data/opensearch-dashboards-3.0.0-test.yml --component observabilityDashboards --test-run-id 215 --paths opensearch=/tmp/workspace/tar opensearch-dashboards=/tmp/workspace/tar --base-path DUMMY_PUBLIC_ARTIFACT_URL/dummy_job/3.0.0/215/linux/x64/tar ') { script ->
-            return [stdout: 'Error running integtest for component observabilityDashboards, creating Github issue', exitValue: 127]}
-        helper.addShMock("""gh issue list --repo https://github.com/opensearch-project/dashboards-observability.git -S "[AUTOCUT] Integration Test failed for observabilityDashboards: 3.0.0 in:title" --json number --jq '.[0].number'""") { script ->
-            return [stdout: '99', exitValue: 0]
-        }
-        helper.addShMock("""gh label list --repo https://github.com/opensearch-project/dashboards-observability.git -S linux:tar:x64 --json name --jq '.[0].name'""") { script ->
-            return [stdout: 'no labels in opensearch-project/dashboards-observability matched your search', exitValue: 0]
-        }
-        assertThrows(Exception) {
-            runScript('jenkins/opensearch/integ-test.jenkinsfile')
-        }
-        assertThat(getCommandExecutions('sh', 'label'), hasItem('{script=gh label create linux:tar:x64 --repo https://github.com/opensearch-project/dashboards-observability.git, returnStdout=true}'))
-        assertThat(getCommandExecutions('sh', 'gh issue'), hasItem('{script=gh issue edit 99 -R https://github.com/opensearch-project/dashboards-observability.git --add-label \"linux:tar:x64\", returnStdout=true}'))
     }
 
     @Test

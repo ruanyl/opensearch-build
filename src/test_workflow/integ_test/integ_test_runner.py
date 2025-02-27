@@ -43,6 +43,8 @@ class IntegTestRunner(abc.ABC):
                 if component.name in self.test_manifest.components:
                     test_config = self.test_manifest.components[component.name]
                     if test_config.integ_test:
+                        if self.args.ci_group:
+                            component.name = f"{component.name}-ci-group-{self.args.ci_group}"
                         test_suite = self.__create_test_suite__(component, test_config, work_dir.path)
                         test_results = test_suite.execute_tests()
                         [self.test_recorder.test_results_logs.generate_component_yml(result_data) for result_data in test_suite.result_data]

@@ -23,13 +23,14 @@ Please refer to the following link for the release version dates: [Release Sched
 ### [Entrance Criteria](https://github.com/opensearch-project/.github/blob/main/RELEASING.md#entrance-criteria-to-start-release-window)
 Criteria | Status | Description  | Comments
 -- | -- | -- | --
+Each component release issue has an assigned owner | :red_circle: |   |
 Documentation draft PRs are up and in tech review for all component changes | :red_circle: |   |
 Sanity testing is done for all components | :red_circle: |   |
 Code coverage has not decreased (all new code has tests) | :red_circle: |   |
 Release notes are ready and available for all components | :red_circle: |   |
 Roadmap is up-to-date (information is available to create release highlights) | :red_circle: |   |
 Release ticket is cut, and there's a forum post announcing the start of the window | :red_circle: |   |
-[Any necessary security reviews](##Security-Reviews) are complete | :red_circle: |   |
+[Any necessary security reviews](https://github.com/opensearch-project/.github/blob/main/RELEASING.md#security-reviews) are complete | :red_circle: |   |
 
 ### OpenSearch {{ env.VERSION }} [exit criteria](https://github.com/opensearch-project/.github/blob/main/RELEASING.md#exit-criteria-to-close-release-window) status:
 Criteria | Status | Description  | Comments
@@ -51,20 +52,19 @@ Release blog is ready | :red_circle: |   |
 ### [Preparation](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#preparation)
 
 - [ ] [Release manager](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#release-manager) assigned.
+- [ ] Update [release page](https://opensearch.org/releases.html) on the website with release manager and release issue details. [Sample PR](https://github.com/opensearch-project/project-website/pull/2642)
 - [ ] Existence of label in each component repo. For more information check the [release-label](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#release-label) section.
 - [ ] [Increase the build frequency](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#increase-the-build-frequency).
 - [ ] [Release Issue](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#release-issue).
 
 ### [Campaigns](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#campaigns)
 
-- [ ] [Component Release Issue](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#component-release-issue).
+- [ ] [Component Release Issue](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#component-release-issues).
 - [ ] [Release Campaigns](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#release-campaigns).
 
-### [Release Branch and Version Increment](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#release-branch-readiness) - _Ends __REPLACE_RELEASE-minus-4-days__
+### [Version Increment](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#version-increment) - _Ends __REPLACE_RELEASE-minus-10-days__
 
-- [ ] [Core Release Branch](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#core).
 - [ ] [Core Version Increment](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#core-version-increment).
-- [ ] [Components Release Branch](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#components).
 - [ ] [Components Version Increment](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#components-version-increment).
 
 ### [Feature Freeze](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#code-complete-and-feature-freeze) - _Ends __REPLACE_RELEASE-minus-12-days__
@@ -76,17 +76,21 @@ Release blog is ready | :red_circle: |   |
 - [ ] Mark this as done once the [Code Complete](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#code-complete-and-feature-freeze) is reviewed.
 - [ ] Create/Verify pull requests to add each component to relase input [manifests/{{ env.VERSION }}/opensearch-{{ env.VERSION }}.yml](/opensearch-project/opensearch-build/tree/main/manifests/{{ env.VERSION }}/opensearch-{{ env.VERSION }}.yml) and [manifests/{{ env.VERSION }}/opensearch-dashboards-{{ env.VERSION }}.yml](/opensearch-project/opensearch-build/tree/main/manifests/{{ env.VERSION }}/opensearch-dashboards-{{ env.VERSION }}.yml).
 
-### [Release Candidate Creation and Testing](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#release-candidate-creation-and-testing) - _Ends __REPLACE_RELEASE-minus-6-days___
+### [Release Branch, Release Candidate Creation and Testing](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#release-candidate-creation-and-testing) - _Ends __REPLACE_RELEASE-minus-6-days___
 
+- [ ] [Core Release Branch](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#core).
+- [ ] [Components Release Branch](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#components).
 - [ ] [Generate Release Candidate](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#release-candidate).
-- [ ] [Integ Test TAR](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#integ-test-tar).
-- [ ] [Integ Test RPM](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#integ-test-rpm).
-- [ ] [Docker Build and Scan](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#docker-build-and-scan).
+- [ ] [Docker Scan](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#docker-scan).
+- [ ] [Integ Test](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#integration-test).
+   - [ ] TAR
+   - [ ] RPM
+   - [ ] DEB
+   - [ ] Windows
 - [ ] [Backwards Compatibility Tests](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#backwards-compatibility-tests).
-- [ ] [Windows Integration Test](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#windows-integration-test).
 - [ ] [Broadcast and Communication](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#broadcast-and-communication).
 - [ ] [Release Candidate Lock](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#release-candidate-lock).
-
+- [ ] [Stop Release Candidate periodic auto builds](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#stop-periodic-auto-builds)
 ### [Performance testing validation](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#benchmark-tests) - _Ends __REPLACE_RELEASE-minus-6-days___
 
 - [ ] Post the benchmark-tests
@@ -96,15 +100,11 @@ Release blog is ready | :red_circle: |   |
 
 - [ ] [Release Labeled Issues](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#release-labeled-issues).
 - [ ] [Go or No-Go](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#go-or-no-go).
-- [ ] [Promote Repos](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#promote-repos).
-- [ ] [Promote artifacts](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#promote-artifacts).
 - [ ] [Release Notes](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#release-notes).
 
 ### [Release](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#main-release) - _Ends {__REPLACE_RELEASE-day}_
 
-- [ ] [Maven Promotion](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#maven-promotion).
-- [ ] [Docker Promotion](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#docker-promotion).
-- [ ] [Release Validation](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#release-validation).
+- [ ] [Central Promotion Workflow](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#central-release-promotion-workflow).
 - [ ] [Collaboration with the Project Management Team](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#collaboration-with-the-project-management-team).
 
 ### [Release Checklist](https://github.com/opensearch-project/opensearch-build/wiki/Releasing-the-Distribution#release-checklist).
@@ -142,15 +142,6 @@ Release blog is ready | :red_circle: |   |
 - [ ] Publish blog posts.
 - [ ] Advertise on Social Media.
 - [ ]  Post on public slack and Github Release issue.
-
-### Post-Release activities
-- [ ] Release Tags.
-- [ ] Input Manifest Update.
-- [ ] Decrease the Build Frequency.
-- [ ] OpenSearch Build Release notes.
-- [ ] Retrospective Issue.
-- [ ] Helm and Ansible Playbook release.
-- [ ] Upcoming Release Preparation.
 
 </p>
 </details>

@@ -48,14 +48,16 @@ jobs:
           - {repo: custom-codecs}
           - {repo: flow-framework}
           - {repo: skills}
+          - {repo: query-insights}
+          - {repo: opensearch-system-templates}
+          - {repo: opensearch-remote-metadata-sdk}
+          - {repo: opensearch-learning-to-rank-base}
         branch:
-          - 1.x
-          - '1.3'
           - 2.x
           - main
-          - '2.12'
-          - '2.13'
-          - '2.14'
+          - '2.18'
+          - '2.19'
+          - '2.20'
         exclude:
           - {entry: {repo: geospatial}, branch: '1.3'}
           - {entry: {repo: neural-search}, branch: '1.3'}

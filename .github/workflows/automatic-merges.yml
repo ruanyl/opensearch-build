@@ -33,12 +33,11 @@ jobs:
           allowed-authors: |
             dependabot
             opensearch-trigger-bot
+            opensearch-ci-bot
             peterzhuamazon
-            bbarani
             gaiksaya
             rishabh6788
             zelinh
-            jordarlu
             prudhvigodithi
             Divyaasm
             dblock

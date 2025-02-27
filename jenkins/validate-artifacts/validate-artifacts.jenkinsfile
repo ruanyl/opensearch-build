@@ -35,8 +35,8 @@ def agent_nodes_docker = [
 
 def agent_nodes = [
     "windows_x64": "Jenkins-Agent-Windows2019-X64-M54xlarge-Docker-Host",
-    "linux_x64": "Jenkins-Agent-AL2023-X64-C54xlarge-Docker-Host",
-    "linux_arm64": "Jenkins-Agent-AL2023-Arm64-C6g4xlarge-Docker-Host",
+    "linux_x64": "Jenkins-Agent-AL2023-X64-M54xlarge-Docker-Host",
+    "linux_arm64": "Jenkins-Agent-AL2023-Arm64-M6g4xlarge-Docker-Host",
 ]
 
 pipeline {
@@ -97,8 +97,8 @@ pipeline {
         )
         choice(
             name: 'DOCKER_SOURCE',
-            description: 'Enter the docker-source to pull the docker image, either DockerHub or ECR.',
-            choices: ["dockerhub", "ecr"]
+            description: 'Enter the docker-source to pull the docker image, either DockerHub or ECR or Both.',
+            choices: ["dockerhub", "ecr", "Both"]
         )
         choice(
             name: 'PROJECTS',
@@ -129,6 +129,10 @@ pipeline {
 
                     if (PROJECTS == 'Both') {
                         PROJECTS = "opensearch opensearch-dashboards"
+                    }
+
+                    if (DOCKER_SOURCE == 'Both') {
+                        DOCKER_SOURCE = "dockerhub ecr"
                     }
 
                     if (OPENSEARCH_DASHBOARDS_ARTIFACT_URL && OPENSEARCH_ARTIFACT_URL == "") {
@@ -201,7 +205,7 @@ pipeline {
                             }
                             validateDistributions["${local_distribution}-${local_architecture}"] = {
                                 // Using scripted pipelines to trigger dynamic parallel stages
-                                timeout(time: 30) {
+                                timeout(time: 1, unit: 'HOURS') {
                                     if ("${local_distribution}" == "docker"){
                                         node(agent_nodes_docker["$local_architecture"]) {
                                             try {
@@ -236,26 +240,27 @@ pipeline {
 
                                                             unstash "validate-artifacts-$BUILD_NUMBER"
 
-                                                            if (VERSION) {
+                                                            retry(2) {
+                                                                if (VERSION) {
+                                                                    validateArtifacts(
+                                                                        version: "$VERSION",
+                                                                        distribution: "${local_distribution}",
+                                                                        arch: "${local_architecture}",
+                                                                        platform: "${local_platform}",
+                                                                        os_build_number: "$OS_BUILD_NUMBER",
+                                                                        osd_build_number: "$OSD_BUILD_NUMBER",
+                                                                        projects: "$PROJECTS",
+                                                                        artifact_type: "$ARTIFACT_TYPE",
+                                                                        allow_http: params.ALLOW_HTTP
+                                                                    )
+                                                                }
+                                                                else {
 
-                                                                validateArtifacts(
-                                                                    version: "$VERSION",
-                                                                    distribution: "${local_distribution}",
-                                                                    arch: "${local_architecture}",
-                                                                    platform: "${local_platform}",
-                                                                    os_build_number: "$OS_BUILD_NUMBER",
-                                                                    osd_build_number: "$OSD_BUILD_NUMBER",
-                                                                    projects: "$PROJECTS",
-                                                                    artifact_type: "$ARTIFACT_TYPE",
-                                                                    allow_http: params.ALLOW_HTTP
-                                                                )
-                                                            }
-                                                            else {
-
-                                                                validateArtifacts(
-                                                                    file_path: "$FILEPATH",
-                                                                    allow_http: params.ALLOW_HTTP
-                                                                )
+                                                                    validateArtifacts(
+                                                                        file_path: "$FILEPATH",
+                                                                        allow_http: params.ALLOW_HTTP
+                                                                    )
+                                                                }
                                                             }
                                                         }
                                                     } catch (e) {
